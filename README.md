@@ -7,12 +7,18 @@ Simple cache plugin middleware caches responses on disk.
 To configure this plugin you should add its configuration to the Traefik dynamic configuration as explained [here](https://docs.traefik.io/getting-started/configuration-overview/#the-dynamic-configuration).
 The following snippet shows how to configure this plugin with the File provider in TOML and YAML: 
 
+### Extended support
+
+- full URL (with query string)
+- some headers
+
+
 Static:
 
 ```toml
 [experimental.plugins.cache]
-  modulename = "github.com/traefik/plugin-simplecache"
-  version = "v0.2.1"
+  modulename = "github.com/janatjak/plugin-simplecache"
+  version = "v0.1.0"
 ```
 
 Dynamic:
@@ -58,3 +64,9 @@ The number of seconds to wait between cache cleanup runs.
 
 This determines if the cache status header `Cache-Status` will be added to the
 response headers. This header can have the value `hit`, `miss` or `error`.
+
+#### Request Headers (`headers`)
+
+*Default: ["Accept","Accept-Encoding","Accept-Language","Origin"]*
+
+Request headers

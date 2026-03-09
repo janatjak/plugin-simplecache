@@ -14,10 +14,11 @@ import (
 
 // Config configures the middleware.
 type Config struct {
-	Path            string `json:"path" yaml:"path" toml:"path"`
-	MaxExpiry       int    `json:"maxExpiry" yaml:"maxExpiry" toml:"maxExpiry"`
-	Cleanup         int    `json:"cleanup" yaml:"cleanup" toml:"cleanup"`
-	AddStatusHeader bool   `json:"addStatusHeader" yaml:"addStatusHeader" toml:"addStatusHeader"`
+	Path            string   `json:"path" yaml:"path" toml:"path"`
+	MaxExpiry       int      `json:"maxExpiry" yaml:"maxExpiry" toml:"maxExpiry"`
+	Cleanup         int      `json:"cleanup" yaml:"cleanup" toml:"cleanup"`
+	AddStatusHeader bool     `json:"addStatusHeader" yaml:"addStatusHeader" toml:"addStatusHeader"`
+	Headers         []string `json:"headers" yaml:"headers" toml:"headers"`
 }
 
 // CreateConfig returns a config instance.
@@ -26,6 +27,12 @@ func CreateConfig() *Config {
 		MaxExpiry:       int((5 * time.Minute).Seconds()),
 		Cleanup:         int((5 * time.Minute).Seconds()),
 		AddStatusHeader: true,
+		Headers: []string{
+			"Accept",
+			"Accept-Encoding",
+			"Accept-Language",
+			"Origin",
+		},
 	}
 }
 
@@ -78,7 +85,7 @@ type cacheData struct {
 func (m *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cs := cacheMissStatus
 
-	key := cacheKey(r)
+	key := m.cacheKey(r)
 
 	b, err := m.cache.Get(key)
 	if err == nil {
@@ -146,8 +153,14 @@ func (m *cache) cacheable(r *http.Request, w http.ResponseWriter, status int) (t
 	return expiry, true
 }
 
-func cacheKey(r *http.Request) string {
-	return r.Method + r.Host + r.URL.Path
+func (m *cache) cacheKey(r *http.Request) string {
+	var key = r.Method + r.Host + r.URL.String()
+
+	for _, header := range m.cfg.Headers {
+		key += r.Header.Get(header)
+	}
+
+	return key
 }
 
 type responseWriter struct {
